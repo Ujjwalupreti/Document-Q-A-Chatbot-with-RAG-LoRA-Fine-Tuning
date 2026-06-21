@@ -150,26 +150,7 @@ The 4-bit base model + LoRA adapter loads once at API startup (singleton in
 
 ---
 
-## 5. Filling In Your Results Table
-
-After Steps 2–5, copy your real numbers here and use them to update the
-resume bullets:
-
-| Metric | Zero-shot | Fine-tuned (QLoRA) | Δ |
-|---|---|---|---|
-| Exact Match | | | |
-| F1 (≈ accuracy) | | | |
-| ROUGE-L | | | |
-
-| Retrieval | Latency (ms/query) |
-|---|---|
-| Naive linear scan | |
-| ANN + re-rank (Chroma) | |
-| Reduction | |
-
----
-
-## 6. Notes
+## 5. Notes
 
 - `data/train.jsonl` and `data/eval.jsonl` currently contain a couple of
   hand-written sample rows so the pipeline can be inspected/tested without
