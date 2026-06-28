@@ -1,0 +1,33 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+
+# RAG / orchestration
+langchain
+langchain-community
+langchain-text-splitters
+langchain-huggingface
+langchain-chroma
+langchain-core
+chromadb
+sentence-transformers
+tiktoken
+
+# Document loaders
+pypdf
+docx2txt
+
+# Fine-tuning
+torch
+transformers
+peft
+trl
+bitsandbytes
+accelerate
+datasets
+
+# Evaluation
+evaluate
+rouge-score
+numpy
