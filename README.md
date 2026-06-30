@@ -9,7 +9,7 @@ This project is structured so that every number in the resume bullets below it
 the included scripts — not a number to copy-paste.
 
 ```
-"Achieved 91% answer accuracy ... by fine-tuning Llama 3.2 (3B) using LoRA ..."
+"Achieved 90% answer accuracy ... by fine-tuning Llama 3.2 (3B) using LoRA ..."
 "Reduced retrieval latency by 55% ... two-stage RAG pipeline ..."
 "Enabled multi-format document ingestion for 50+ concurrent users ..."
 "Cut GPU fine-tuning cost by 60% vs full fine-tuning by applying QLoRA ..."
