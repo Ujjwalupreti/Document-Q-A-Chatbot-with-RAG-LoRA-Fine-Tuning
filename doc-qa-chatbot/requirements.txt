@@ -1,33 +1,33 @@
-fastapi
-uvicorn[standard]
-python-multipart
-pydantic
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+python-multipart==0.0.18
+pydantic==2.10.3
 
 # RAG / orchestration
-langchain
-langchain-community
-langchain-text-splitters
-langchain-huggingface
-langchain-chroma
-langchain-core
-chromadb
-sentence-transformers
-tiktoken
+langchain==0.3.9
+langchain-core==0.3.21
+langchain-community==0.3.9
+langchain-text-splitters==0.3.2
+langchain-huggingface==0.1.2
+langchain-chroma==0.1.4
+chromadb==0.5.20
+sentence-transformers==3.3.1
+tiktoken==0.8.0
 
 # Document loaders
-pypdf
-docx2txt
+pypdf==5.1.0
+docx2txt==0.8
 
 # Fine-tuning
-torch
-transformers
-peft
-trl
-bitsandbytes
-accelerate
-datasets
+torch==2.4.1
+transformers==4.46.3
+peft==0.14.0
+trl==0.12.2
+bitsandbytes==0.44.1
+accelerate==1.1.1
+datasets==3.1.0
 
 # Evaluation
-evaluate
-rouge-score
-numpy
+evaluate==0.4.3
+rouge-score==0.1.2
+numpy==2.1.3
