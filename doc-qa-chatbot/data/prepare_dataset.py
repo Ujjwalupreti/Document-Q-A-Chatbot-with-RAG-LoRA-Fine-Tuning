@@ -25,8 +25,7 @@ PROMPT_TEMPLATE = (
     "### Answer: {answer}"
 )
 
-_DATASET_CANDIDATES = [
-    ("ibm/cuad", "train"),          # Current HF dataset
+_DATASET_CANDIDATES = [         
     ("theatticusproject/cuad", "train"),
 ]
 
