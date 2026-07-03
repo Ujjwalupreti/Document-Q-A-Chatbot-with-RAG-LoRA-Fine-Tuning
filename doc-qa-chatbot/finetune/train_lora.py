@@ -43,34 +43,6 @@ from datasets import load_dataset
 
 logger = logging.getLogger(__name__)
 
-
-def _check_keras_compat() -> None:
-    """
-    Emit a clear warning if Keras 3 is present and the env-var fix may not
-    be enough, so the user knows exactly what to downgrade.
-    """
-    try:
-        import keras  # noqa: PLC0415
-        major = int(keras.__version__.split(".")[0])
-        if major >= 3:
-            backend = getattr(keras, "backend", lambda: "unknown")()
-            if callable(backend):
-                backend = backend()
-            logger.warning(
-                "Keras %s detected (backend: %s). "
-                "If training fails with 'Keras 3 not yet supported', run:\n"
-                "  pip install tf-keras --upgrade\n"
-                "  pip install 'keras<3' --upgrade\n"
-                "See requirements_train.txt for the pinned safe versions.",
-                keras.__version__,
-                backend,
-            )
-    except ImportError:
-        pass  # Keras not installed at all — no problem.
-
-
-_check_keras_compat()
-
 # ---------------------------------------------------------------------------
 # Now it is safe to import TRL / PEFT / transformers.
 # ---------------------------------------------------------------------------
@@ -91,16 +63,20 @@ def build_model_and_tokenizer(base_model: str):
         bnb_4bit_use_double_quant=True,
     )
 
-    tokenizer = AutoTokenizer.from_pretrained(base_model)
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
+    tokenizer = AutoTokenizer.from_pretrained(base_model,use_fast=True,trust_remote_code=False,)
+    tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.padding_side = "right"
 
     model = AutoModelForCausalLM.from_pretrained(
         base_model,
         quantization_config=bnb_config,
         device_map="auto",
+        torch_dtype=torch.bfloat16,
+        trust_remote_code=False,
     )
     model = prepare_model_for_kbit_training(model)
+    model.gradient_checkpointing_enable()
+    model.config.use_cache = False
     return model, tokenizer
 
 
@@ -111,7 +87,7 @@ def build_lora_config() -> LoraConfig:
         lora_dropout=0.05,
         bias="none",
         task_type="CAUSAL_LM",
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+        target_modules=["q_proj", "k_proj", "v_proj", "o_proj","gate_proj","up_proj","down_proj"],
     )
 
 
@@ -126,7 +102,7 @@ def main(args: argparse.Namespace) -> None:
     model = get_peft_model(model, lora_config)
     model.print_trainable_parameters()
 
-    train_dataset = load_dataset("json", data_files=args.train_file, split="train")
+    train_dataset = load_dataset("json", data_files=args.train_file, split="train",keep_in_memory=False)
 
     eval_dataset   = None
     eval_strategy  = "no"
@@ -144,14 +120,19 @@ def main(args: argparse.Namespace) -> None:
         per_device_train_batch_size=4,
         gradient_accumulation_steps=4,
         learning_rate=2e-4,
+        warmup_ratio=0.03,
         logging_steps=10,
         save_strategy="epoch",
+        save_total_limit=2,
         eval_strategy=eval_strategy,
         bf16=True,
+        optim="paged_adamw_8bit",
+        lr_scheduler_type="cosine",
         report_to="none",
-        # FIX: max_seq_length belongs on SFTConfig in trl >= 0.12, not as a
-        # separate kwarg to SFTTrainer.  Pinning it here keeps the script
-        # compatible with both old and new trl versions.
+        gradient_checkpointing=True,
+        group_by_length=True,
+        packing=True,
+        seed=42,
         max_seq_length=2048,
         dataset_text_field="text",
     )
@@ -164,9 +145,11 @@ def main(args: argparse.Namespace) -> None:
         processing_class=tokenizer,
     )
 
-    trainer.train()
+    trainer.train(resume_from_checkpoint=args.resume)
 
     model.save_pretrained(args.output_dir)
+    trainer.save_state()
+    trainer.save_model()
     tokenizer.save_pretrained(args.output_dir)
     logger.info("LoRA adapter saved to %s", args.output_dir)
 
@@ -180,5 +163,8 @@ if __name__ == "__main__":
     parser.add_argument("--eval_file",   type=str, default="../data/eval.jsonl")
     parser.add_argument("--output_dir",  type=str, default="./lora-doc-qa")
     parser.add_argument("--epochs",      type=int, default=3)
+    parser.add_argument("--resume",default=None,)
+    parser.add_argument("--push_to_hub",action="store_true",)
+    parser.add_argument("--hub_model_id",default=None,)
     args = parser.parse_args()
     main(args)
