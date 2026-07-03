@@ -131,7 +131,7 @@ def main(args: argparse.Namespace) -> None:
         report_to="none",
         gradient_checkpointing=True,
         group_by_length=True,
-        packing=True,
+        packing=False,
         seed=42,
         max_seq_length=2048,
         dataset_text_field="text",
