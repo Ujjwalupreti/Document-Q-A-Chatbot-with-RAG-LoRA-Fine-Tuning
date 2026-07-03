@@ -198,4 +198,4 @@ if __name__ == "__main__":
     parser.add_argument("--out_dir",    type=str, default=".")
     parser.add_argument("--force",action="store_true",help="Regenerate train/eval JSONL even if already present.")
     args = parser.parse_args()
-    main(args.train_size, args.eval_size, args.seed, args.out_dir)
+    main(args.train_size, args.eval_size, args.seed, args.out_dir,args.force,)
