@@ -31,27 +31,21 @@ PROMPT_TEMPLATE = (
 )
 
 def _normalize_example(example):
-    context = ""
 
-    if "doc_text" in example:
-        context = example["doc_text"]
+    context = example.get("context", "").strip()
+    question = example.get("question", "").strip()
+    answers = example.get("answers", {})
 
-    elif "document" in example:
-        context = example["document"]
-
-    question = example.get("user_utterance", "")
-    answer = example.get("system_utterance", "")
-    context = str(context).strip()
-    question = str(question).strip()
-    answer = str(answer).strip()
-
+    if isinstance(answers, dict):
+        answer_list = answers.get("text", [])
+        answer = answer_list[0].strip() if len(answer_list) > 0 else ""
+    else:
+        answer = ""
     if not context:
         return None
-
     if not question:
         return None
-
-    if not answer:
+    if answer == "":
         return None
 
     return {
@@ -66,11 +60,11 @@ def _normalize_example(example):
     }
 
 
-def _load_multidoc2dial():
+def _load_squad():
 
     from datasets import load_dataset
 
-    print("Loading MultiDoc2Dial...")
+    print("Loading SQuAD v2...")
 
     dataset = load_dataset(
         "squad_v2",
@@ -111,7 +105,7 @@ def main(train_size: int,eval_size: int,seed: int,out_dir: str,force: bool = Fal
         except Exception as exc:
             print(f"Warning: HF login failed: {exc}")
 
-    raw_ds = _load_multidoc2dial()
+    raw_ds = _load_squad()
     examples = []
 
     for row in raw_ds:
