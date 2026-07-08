@@ -19,68 +19,73 @@ import os
 from pathlib import Path
 
 PROMPT_TEMPLATE = (
-    "### Instruction: Answer the question based on the provided context.\n"
-    "### Context: {context}\n"
-    "### Question: {question}\n"
-    "### Answer: {answer}"
+    "### Instruction:\n"
+    "You are an intelligent document assistant. "
+    "Answer the user's question ONLY using the provided document.\n\n"
+    "### Document:\n"
+    "{context}\n\n"
+    "### Question:\n"
+    "{question}\n\n"
+    "### Response:\n"
+    "{answer}"
 )
 
-_DATASET_CANDIDATES = [         
-    ("theatticusproject/cuad", "train"),
+_DATASET_CANDIDATES = [
+    ("multidoc2dial", "train"),
 ]
 
 
-def _normalize_example(example: dict) -> dict | None:
-    """
-    Normalise field names across the two known CUAD schema variants:
+def _normalize_example(example):
+    context = ""
 
-    Variant A (theatticusproject/cuad-qa):
-        context, question, answers.text[]
+    if "doc_text" in example:
+        context = example["doc_text"]
 
-    Variant B (cuad):
-        context, question, answers.text[]   ← same schema, just different repo
+    elif "document" in example:
+        context = example["document"]
 
-    Returns None if the example has no extractable answer (skip it).
-    """
-    context  = (example.get("context") or "").strip()
-    question = (example.get("question") or "").strip()
+    question = example.get("user_utterance", "")
+    answer = example.get("system_utterance", "")
+    context = str(context).strip()
+    question = str(question).strip()
+    answer = str(answer).strip()
 
-    answers = example.get("answers", {}) or {}
-    texts   = answers.get("text", []) or []
-    answer  = texts[0].strip() if texts else ""
+    if not context:
+        return None
 
-    if not context or not question or not answer:
+    if not question:
+        return None
+
+    if not answer:
         return None
 
     return {
         "text": PROMPT_TEMPLATE.format(
-            context=context, question=question, answer=answer
+            context=context,
+            question=question,
+            answer=answer,
         ),
-        "context":  context,
+        "context": context,
         "question": question,
-        "answer":   answer,
+        "answer": answer,
     }
 
 
-def _load_cuad_dataset():
+def _load_multidoc2dial():
 
     from datasets import load_dataset
-    last_error = None
-    for repo, split in _DATASET_CANDIDATES:
-        try:
-            print(f"Loading {repo} ({split})")
-            ds = load_dataset(
-                repo,
-                split=split,
-                token=os.environ.get("HF_TOKEN", None)
-            )
-            print(f"Loaded {len(ds)} rows")
-            return ds
 
-        except Exception as e:
-            print(e)
-            last_error = e
-    raise RuntimeError(last_error)
+    print("Loading MultiDoc2Dial...")
+
+    dataset = load_dataset(
+        "multidoc2dial",
+        split="train",
+        token=os.environ.get("HF_TOKEN", None),
+    )
+
+    print(f"Loaded {len(dataset):,} examples")
+
+    return dataset
 
 
 def main(train_size: int,eval_size: int,seed: int,out_dir: str,force: bool = False,) -> None:
@@ -91,9 +96,6 @@ def main(train_size: int,eval_size: int,seed: int,out_dir: str,force: bool = Fal
     train_file = out_path / "train.jsonl"
     eval_file = out_path / "eval.jsonl"
 
-    # ----------------------------------------------------------
-    # Skip generation if dataset already exists
-    # ----------------------------------------------------------
     if train_file.exists() and eval_file.exists() and not force:
         print("Dataset already exists.")
         print(f"Train : {train_file}")
@@ -101,9 +103,6 @@ def main(train_size: int,eval_size: int,seed: int,out_dir: str,force: bool = Fal
         print("Use --force to regenerate the dataset.")
         return
 
-    # ----------------------------------------------------------
-    # Login to Hugging Face (optional)
-    # ----------------------------------------------------------
     hf_token = os.environ.get("HF_TOKEN", "").strip()
 
     if hf_token:
@@ -117,10 +116,7 @@ def main(train_size: int,eval_size: int,seed: int,out_dir: str,force: bool = Fal
         except Exception as exc:
             print(f"Warning: HF login failed: {exc}")
 
-    # ----------------------------------------------------------
-    # Load dataset
-    # ----------------------------------------------------------
-    raw_ds = _load_cuad_dataset()
+    raw_ds = _load_multidoc2dial()
     examples = []
 
     for row in raw_ds:
@@ -133,9 +129,6 @@ def main(train_size: int,eval_size: int,seed: int,out_dir: str,force: bool = Fal
     if len(examples) == 0:
         raise RuntimeError("No usable examples were found in the dataset.")
 
-    # ----------------------------------------------------------
-    # Adjust sizes automatically
-    # ----------------------------------------------------------
     total_needed = train_size + eval_size
 
     if len(examples) < total_needed:
@@ -146,9 +139,6 @@ def main(train_size: int,eval_size: int,seed: int,out_dir: str,force: bool = Fal
         
         print(f"Automatically using {train_size} train / {eval_size} eval examples.")
 
-    # ----------------------------------------------------------
-    # Shuffle
-    # ----------------------------------------------------------
     import random
 
     rng = random.Random(seed)
@@ -157,9 +147,6 @@ def main(train_size: int,eval_size: int,seed: int,out_dir: str,force: bool = Fal
     train_examples = examples[:train_size]
     eval_examples = examples[train_size : train_size + eval_size]
 
-    # ----------------------------------------------------------
-    # Write JSONL
-    # ----------------------------------------------------------
     for filename, split in [
         ("train.jsonl", train_examples),
         ("eval.jsonl", eval_examples),
@@ -173,9 +160,6 @@ def main(train_size: int,eval_size: int,seed: int,out_dir: str,force: bool = Fal
                 
         print(f"Wrote {len(split):,} examples -> {file_path}")
 
-    # ----------------------------------------------------------
-    # Save statistics
-    # ----------------------------------------------------------
     stats = {
         "total_examples": len(examples),
         "train_examples": len(train_examples),
