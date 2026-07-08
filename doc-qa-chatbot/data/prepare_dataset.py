@@ -30,11 +30,6 @@ PROMPT_TEMPLATE = (
     "{answer}"
 )
 
-_DATASET_CANDIDATES = [
-    ("multidoc2dial", "train"),
-]
-
-
 def _normalize_example(example):
     context = ""
 
@@ -78,7 +73,7 @@ def _load_multidoc2dial():
     print("Loading MultiDoc2Dial...")
 
     dataset = load_dataset(
-        "multidoc2dial",
+        "squad_v2",
         split="train",
         token=os.environ.get("HF_TOKEN", None),
     )
