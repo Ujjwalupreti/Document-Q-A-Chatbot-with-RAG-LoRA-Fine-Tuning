@@ -376,7 +376,7 @@ LinkedIn: https://www.linkedin.com/in/ujjwal-upreti-68627030a/
 ---
 
 ## ⭐ Support
-If you found this project useful:
-⭐ Star the repository
-🍴 Fork it
+If you found this project useful: <br>
+⭐ Star the repository <br>
+🍴 Fork it <br>
 📢 Share it with others
