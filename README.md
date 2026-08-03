@@ -154,7 +154,7 @@ cd Document-Q-A-Chatbot-with-RAG-LoRA-Fine-Tuning
 
 **Windows**
 ```bash
-python -m venv venv
+python -m venv venv    
 venv\Scripts\activate
 ```
 
