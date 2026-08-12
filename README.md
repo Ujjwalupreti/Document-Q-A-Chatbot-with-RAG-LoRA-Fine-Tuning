@@ -4,7 +4,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green)
 ![Streamlit](https://img.shields.io/badge/Streamlit-UI-red)
 ![Transformers](https://img.shields.io/badge/HuggingFace-Transformers-yellow)
-![PEFT](https://img.shields.io/badge/PEFT-LoRA-orange)
+![PEFT](https://img.shields.io/badge/PEFT-LoRA-orange) 
 ![QLoRA](https://img.shields.io/badge/QLoRA-4bit-success)
 ![ChromaDB](https://img.shields.io/badge/VectorDB-Chroma-purple)
 ![License](https://img.shields.io/badge/License-MIT-blue)
