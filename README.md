@@ -16,7 +16,7 @@ Document Q&A Chatbot is an end-to-end **Retrieval-Augmented Generation (RAG)** s
 
 Unlike traditional document search systems, this project combines:
 - Dense semantic retrieval
-- Context-aware generation
+- Context-aware generation 
 - Parameter-efficient fine-tuning
 - FastAPI backend
 - Streamlit interface
